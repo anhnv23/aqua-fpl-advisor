@@ -5,7 +5,7 @@ export default async () => json({
   app: "aqua-fpl-advisor",
   functions: true,
   fplApi: "https://fantasy.premierleague.com/api/",
-  identityRequiredForAdvisor: true,
+  identityRequiredForAdvisor: false,
   chatgptAdvisor: Boolean(process.env.OPENAI_API_KEY),
   advisorModes: {
     quick: {

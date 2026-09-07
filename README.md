@@ -1,72 +1,50 @@
-# Aqua FPL Advisor
+# Aqua FPL Advisor v5
 
-Webapp độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, lập kế hoạch chuyển nhượng nhiều Gameweek và trao đổi với ChatGPT trong ngữ cảnh đội hình hiện tại.
+Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
 
-Lưu ý về đăng nhập: bản Netlify dùng tài khoản riêng của Aqua FPL Advisor thông qua Netlify Identity. Đây không phải OAuth tài khoản ChatGPT; ChatGPT được gọi bằng `OPENAI_API_KEY` bảo mật của website sau khi người dùng Aqua đã đăng nhập.
+## Điểm mới
 
-Nguồn dữ liệu FPL được cấu hình trực tiếp tại:
+- Phòng tư vấn mở trực tiếp, không yêu cầu đăng nhập.
+- Nhận định tự động từ điểm 5 trận gần nhất, FDR và khả năng ra sân.
+- Mỗi cầu thủ có tên/logo CLB, điểm 5 trận gần nhất và lịch 5 trận tiếp theo.
+- Áp dụng từng gợi ý vào bảng mô phỏng chuyển nhượng.
+- Theo dõi ngân sách, giá trị đội và số cầu thủ theo CLB; cảnh báo ngay khi vi phạm.
+- Free Hit dùng đội hình trước đó làm cơ sở tư vấn; Free Transfer cho phép nhập tay khi API không có.
 
-```text
-https://fantasy.premierleague.com/api/
-```
+Nguồn dữ liệu: `https://fantasy.premierleague.com/api/`.
 
-## Tính năng
+## Cập nhật từ bản cũ
 
-- Tải hồ sơ, đội hình 15 cầu thủ, điểm theo Gameweek, lịch sử chuyển nhượng và chip từ FPL.
-- Tính một giá trị Free Transfer tham khảo từ lịch sử mùa giải nhưng không dùng thay cho số chính thức/nhập tay.
-- Ưu tiên Free Transfer chính xác nếu FPL API trả về; nếu dữ liệu công khai không có, người dùng nhập thủ công theo từng Entry ID và Gameweek.
-- Khi Gameweek hiện tại dùng Free Hit, đội hình của Gameweek trước được dùng làm cơ sở tư vấn dài hạn.
-- Hiển thị lịch thi đấu 2–8 Gameweek, FDR và cảnh báo khả năng ra sân.
-- Gợi ý chuyển nhượng theo ba chế độ: An toàn, Cân bằng và Tấn công.
-- Bảng tin ưu tiên các thay đổi ảnh hưởng trực tiếp tới cầu thủ đang sở hữu.
-- ChatGPT Advisor chỉ mở sau khi người dùng đăng nhập Aqua FPL Advisor bằng Netlify Identity; có thể bật tìm kiếm web cho tin mới sát deadline.
-- Hai chế độ AI trong Phòng tư vấn:
-  - **Tư vấn nhanh** dùng GPT-5.6 Luna với reasoning `low` cho đội trưởng, bench, so sánh cầu thủ và quyết định Gameweek kế tiếp.
-  - **Phân tích chuyên sâu** dùng GPT-5.6 Terra với reasoning `medium` cho kế hoạch 3-5 Gameweek, chip, hit và nhiều phương án chuyển nhượng.
-- Chế độ tư vấn được lưu trên thiết bị; mỗi câu trả lời hiển thị model và mức phân tích đã sử dụng.
-- Tự tải lại dữ liệu FPL mỗi 15 phút khi trang đang mở.
+1. Giải nén v5 và ghi đè toàn bộ mã nguồn trong repository cũ.
+2. Xóa `public/auth-client.js` và `src/auth-client.js` nếu repository còn giữ các file này.
+3. Commit và push; chờ Netlify deploy.
+4. Giữ `OPENAI_API_KEY`; hai biến tùy chọn là `OPENAI_FAST_MODEL=gpt-5.6-luna` và `OPENAI_DEEP_MODEL=gpt-5.6-terra`.
+5. Không cần Netlify Identity, Supabase, database hoặc SQL.
+6. Kiểm tra `/api/health`, rồi tải lại bằng `Ctrl + F5`.
 
-## Kiến trúc độc lập
-
-Dự án này không phụ thuộc Aqua Fantaxi, Supabase, league nội bộ hoặc trang Admin. Trình duyệt chỉ lưu Entry ID và khoảng phân tích trong `localStorage`.
+## Cấu trúc
 
 ```text
-public/index.html                 Giao diện webapp
-public/auth-client.js             Client đăng nhập Netlify Identity
-src/auth-client.js                Mã nguồn client đăng nhập
-netlify/functions/fpl.mjs        Proxy và tổng hợp dữ liệu FPL
-netlify/functions/advisor.mjs    ChatGPT Advisor
-netlify/functions/health.mjs     Kiểm tra trạng thái cấu hình
-netlify/functions/_shared.mjs    Tiện ích phản hồi JSON
-netlify.toml                      Redirect và cấu hình Netlify
+public/index.html
+netlify/functions/fpl.mjs
+netlify/functions/advisor.mjs
+netlify/functions/health.mjs
+netlify/functions/_shared.mjs
+netlify.toml
 ```
 
-## Triển khai Netlify
+## Lưu ý bảo mật
 
-1. Tạo repository GitHub mới và đưa toàn bộ nội dung thư mục này lên repository.
-2. Tạo Netlify site mới từ repository đó.
-3. Netlify sẽ tự nhận `public` là publish directory và `netlify/functions` là functions directory.
-4. Thêm Environment Variable `OPENAI_API_KEY` để bật ChatGPT Advisor.
-5. Thêm hai biến model nếu muốn ghi đè giá trị mặc định:
-   - `OPENAI_FAST_MODEL=gpt-5.6-luna`
-   - `OPENAI_DEEP_MODEL=gpt-5.6-terra`
-   - Biến cũ `OPENAI_MODEL` không còn được dùng để hai chế độ luôn chọn đúng model.
-6. Vào mục **Identity** của project và chọn **Enable Identity**.
-7. Trong **Identity → Registration**, chọn `Open` để người dùng tự đăng ký hoặc `Invite only` để Admin mời từng email.
-8. Deploy lại site và mở `/api/health` để kiểm tra trạng thái.
-
-Không cần tạo database hoặc chạy SQL. Các chức năng FPL vẫn hoạt động khi chưa có OpenAI key; riêng cửa sổ ChatGPT sẽ yêu cầu đăng nhập và báo chưa được cấu hình nếu thiếu key.
+Không có đăng nhập nghĩa là mọi khách truy cập đều có thể dùng quota API của chủ website. Key vẫn chỉ nằm trong Netlify Function. Endpoint có giới hạn tần suất theo IP, nhưng nên theo dõi OpenAI usage/billing và bổ sung CAPTCHA hoặc quota nếu công khai rộng rãi.
 
 ## Chạy local
-
-Yêu cầu Node.js 20+ và Netlify CLI:
 
 ```bash
 npm install -g netlify-cli
 netlify dev
 ```
 
-Tạo file `.env` cục bộ nếu cần dùng ChatGPT:
+File `.env` cục bộ:
 
 ```text
 OPENAI_API_KEY=...
@@ -74,11 +52,4 @@ OPENAI_FAST_MODEL=gpt-5.6-luna
 OPENAI_DEEP_MODEL=gpt-5.6-terra
 ```
 
-Không commit `.env` hoặc API key lên GitHub.
-
-## Lưu ý dữ liệu FPL
-
-- Đội hình từng Gameweek chỉ công khai sau deadline.
-- Free transfer là giá trị ước tính từ lịch sử chuyển nhượng/chip công khai.
-- Giá bán thực tế của cầu thủ có thể khác giá hiện tại, nên ngân sách của phương án chuyển nhượng là ước tính.
-- Nguồn FPL là API công khai không được bảo đảm ổn định như API thương mại chính thức.
+Không commit `.env` hoặc API key. Giá bán thực tế có thể khác giá hiện tại do quy tắc lợi nhuận chuyển nhượng; mô phỏng sử dụng giá hiện tại và bank công khai.

@@ -1,5 +1,4 @@
 import { json } from "./_shared.mjs";
-import { getUser } from "@netlify/identity";
 
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS = 12;
@@ -65,6 +64,7 @@ function cleanContext(context) {
       expectedNext: pick?.player?.epNext,
       chanceNextRound: pick?.player?.chanceNextRound,
       news: String(pick?.player?.news || "").slice(0, 280),
+      recentPoints: (pick?.player?.recentPoints || []).slice(-5).map((row) => ({ gw: row?.gameweek, points: row?.points, minutes: row?.minutes })),
       fixtures: (pick?.player?.fixtures || []).slice(0, 8).map((fixture) => ({
         gw: fixture.event,
         opponent: fixture.opponent?.shortName,
@@ -74,6 +74,16 @@ function cleanContext(context) {
       captain: Boolean(pick?.is_captain),
       bench: Number(pick?.position) > 11,
     })),
+    squadAnalysis: context.squadAnalysis || null,
+    transferPlan: {
+      budgetLimit: context?.transferPlan?.budgetLimit ?? null,
+      teamLimit: context?.transferPlan?.teamLimit ?? null,
+      plannedValue: context?.transferPlan?.plannedValue ?? null,
+      remainingBank: context?.transferPlan?.remainingBank ?? null,
+      valid: context?.transferPlan?.valid ?? null,
+      warnings: (Array.isArray(context?.transferPlan?.warnings) ? context.transferPlan.warnings : []).slice(0, 8),
+      moves: (Array.isArray(context?.transferPlan?.moves) ? context.transferPlan.moves : []).slice(0, 8),
+    },
     suggestedTransfers: (Array.isArray(context.transferSuggestions) ? context.transferSuggestions : []).slice(0, 6).map((move) => ({
       out: move?.outPlayer?.webName,
       in: move?.inPlayer?.webName,
@@ -102,8 +112,6 @@ function outputText(payload) {
 
 export default async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405, { allow: "POST" });
-  const user = await getUser();
-  if (!user) return json({ error: "Hãy đăng nhập Aqua FPL Advisor để sử dụng Phòng tư vấn đội hình." }, 401);
   if (!allowRequest(request)) return json({ error: "Bạn đang gửi quá nhiều câu hỏi. Hãy thử lại sau ít phút." }, 429);
 
   const apiKey = process.env.OPENAI_API_KEY || "";
@@ -133,7 +141,7 @@ export default async (request) => {
         "Bạn là cố vấn Fantasy Premier League bằng tiếng Việt.",
         "Ưu tiên quyết định thực dụng cho Gameweek sắp tới: giữ/chuyển nhượng, đội hình đá chính, đội trưởng, chip và kế hoạch 3-5 vòng.",
         "Phân biệt rõ dữ liệu xác nhận, ước tính và giả định. Không khẳng định free transfer ước tính là số chính thức.",
-        "Tôn trọng ngân sách, vị trí, giới hạn 3 cầu thủ mỗi CLB và số free transfer. Nêu rõ hit -4 nếu đề xuất vượt số lượt miễn phí.",
+        "Tôn trọng ngân sách, vị trí, giới hạn cầu thủ mỗi CLB do dữ liệu FPL cung cấp và số free transfer. Nêu rõ hit -4 nếu đề xuất vượt số lượt miễn phí.",
         "Nếu dùng web search, ưu tiên nguồn chính thức của CLB, Premier League và FPL; ghi link nguồn ngay cạnh thông tin chấn thương hoặc đội hình.",
         modeConfig.instruction,
         advisorMode === "quick"

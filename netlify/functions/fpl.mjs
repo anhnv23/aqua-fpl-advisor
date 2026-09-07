@@ -21,11 +21,13 @@ async function fplFetch(path) {
 
 function compactTeam(team) {
   if (!team) return null;
+  const code = Number(team.code) || null;
   return {
     id: Number(team.id),
     name: String(team.name || ""),
     shortName: String(team.short_name || ""),
-    code: Number(team.code) || null,
+    code,
+    badgeUrl: code ? `https://resources.premierleague.com/premierleague/badges/100/t${code}.png` : null,
     strength: Number(team.strength) || null,
   };
 }
@@ -223,7 +225,7 @@ function buildSquadNews(squad, allPlayers) {
   return [...ownedNews, ...ownedMarket, ...marketLeaders].slice(0, 10);
 }
 
-function transferSuggestions(squad, candidates, bank, horizon) {
+function transferSuggestions(squad, candidates, bank, horizon, teamLimit = 3) {
   const ownedIds = new Set(squad.map((pick) => Number(pick.player?.id)));
   const clubCounts = new Map();
   for (const pick of squad) {
@@ -239,7 +241,7 @@ function transferSuggestions(squad, candidates, bank, horizon) {
       if (ownedIds.has(Number(candidate.id)) || candidate.position !== outgoing.position || candidate.nowCost > budget) return false;
       const incomingClub = Number(candidate.team?.id);
       const outgoingClub = Number(outgoing.team?.id);
-      return incomingClub === outgoingClub || (clubCounts.get(incomingClub) || 0) < 3;
+      return incomingClub === outgoingClub || (clubCounts.get(incomingClub) || 0) < teamLimit;
     });
     if (!incoming) continue;
     const gain = incoming.advisorScore - outgoing.advisorScore;
@@ -261,6 +263,61 @@ function transferSuggestions(squad, candidates, bank, horizon) {
     });
   }
   return moves.sort((a, b) => b.projectedGain - a.projectedGain).slice(0, 6);
+}
+
+function recentHistory(summary) {
+  return [...(Array.isArray(summary?.history) ? summary.history : [])]
+    .filter((row) => Number.isInteger(Number(row.round)))
+    .sort((a, b) => Number(a.round) - Number(b.round))
+    .slice(-5)
+    .map((row) => ({
+      gameweek: Number(row.round),
+      points: Number(row.total_points) || 0,
+      minutes: Number(row.minutes) || 0,
+      home: Boolean(row.was_home),
+      opponentTeamId: Number(row.opponent_team) || null,
+    }));
+}
+
+function squadAnalysis(squad, horizon) {
+  const players = squad.map((pick) => pick.player).filter(Boolean);
+  const risky = players.filter((player) => availabilityRisk(player) > 0);
+  const recentTotals = players.map((player) =>
+    (player.recentPoints || []).reduce((sum, row) => sum + number(row.points), 0)
+  );
+  const recentTotal = recentTotals.reduce((sum, value) => sum + value, 0);
+  const fixtureRows = players.flatMap((player) => player.fixtures || []);
+  const averageFdr = fixtureRows.length
+    ? fixtureRows.reduce((sum, fixture) => sum + number(fixture.difficulty, 3), 0) / fixtureRows.length
+    : 3;
+  const inForm = players.map((player, index) => ({ player, points: recentTotals[index] })).sort((a, b) => b.points - a.points).slice(0, 3);
+  const priorities = players.map((player, index) => ({
+    player,
+    points: recentTotals[index],
+    risk: availabilityRisk(player),
+    score: availabilityRisk(player) * 2 + Math.max(0, number(player.averageFdr, 3) - 3) * 2 - recentTotals[index] / 8,
+  })).sort((a, b) => b.score - a.score).slice(0, 3);
+  const rating = Math.round(Math.max(0, Math.min(100,
+    78 + Math.min(12, recentTotal / Math.max(1, players.length * 3)) - risky.length * 7 - Math.max(0, averageFdr - 3) * 12
+  )));
+  const verdict = risky.length >= 3
+    ? "Đội hình có nhiều rủi ro ra sân; nên ưu tiên xử lý cầu thủ không chắc suất trước khi tối ưu lịch đấu."
+    : averageFdr <= 2.8
+      ? `Nền lịch ${horizon} Gameweek khá thuận lợi; có thể ưu tiên giữ transfer và tập trung đội trưởng.`
+      : averageFdr >= 3.35
+        ? `Lịch ${horizon} Gameweek tương đối khó; nên chuyển dần sang các CLB có FDR tốt hơn.`
+        : "Cấu trúc đội hình cân bằng; chỉ nên chuyển nhượng khi có nâng cấp rõ về phong độ hoặc khả năng ra sân.";
+  return {
+    rating,
+    verdict,
+    metrics: { recentPoints: recentTotal, averageFdr: Number(averageFdr.toFixed(2)), availabilityRisks: risky.length },
+    strengths: inForm.map(({ player, points }) => ({ playerId: player.id, player: player.webName, detail: `${points} điểm trong tối đa 5 trận gần nhất · FDR ${number(player.averageFdr, 3).toFixed(1)}` })),
+    priorities: priorities.map(({ player, points, risk }) => ({
+      playerId: player.id,
+      player: player.webName,
+      detail: risk > 0 ? `${player.chanceNextRound ?? "Chưa rõ"}% khả năng ra sân · ${player.news || "cần theo dõi"}` : `${points} điểm gần đây · FDR ${number(player.averageFdr, 3).toFixed(1)}`,
+    })),
+  };
 }
 
 function bootstrapMaps(bootstrap) {
@@ -341,15 +398,19 @@ export default async (request) => {
         .map(withProjection)
         .filter((player) => player.canSelect && !player.removed)
         .sort((a, b) => b.advisorScore - a.advisorScore);
-      const squad = advicePicks.picks.map((pick) => ({
+      const baseSquad = advicePicks.picks.map((pick) => ({
         ...pick,
         player: withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
       }));
+      const elementSummaries = await Promise.all(baseSquad.map((pick) => fplFetch(`element-summary/${pick.player?.id}/`).catch(() => null)));
+      const squad = baseSquad.map((pick, index) => ({ ...pick, player: { ...pick.player, recentPoints: recentHistory(elementSummaries[index]) } }));
       const bank = Number(advicePicks.entry_history?.bank ?? profile.last_deadline_bank ?? 0) || 0;
       const maxFreeTransfers = Math.max(1, Number(bootstrap.game_settings?.max_extra_free_transfers || 0) + 1);
+      const squadTeamLimit = Math.max(1, Number(bootstrap.game_settings?.squad_team_limit) || 3);
+      const initialSquadBudget = Math.max(0, Number(bootstrap.game_settings?.squad_total_spend) || 1000);
       const freeTransfers = directFreeTransfers(profile, currentPicks, currentPicks.entry_history, advicePicks, advicePicks.entry_history);
       const freeTransfersEstimate = freeTransferEstimate(currentRows, chips, maxFreeTransfers);
-      const suggestions = transferSuggestions(squad, candidatePool, bank, horizon);
+      const suggestions = transferSuggestions(squad, candidatePool, bank, horizon, squadTeamLimit);
       const usedChipNames = chips.map((chip) => ({ name: chip.name, event: Number(chip.event), time: chip.time || null }));
       const enrichedTransfers = (Array.isArray(transfers) ? transfers : []).map((transfer) => ({
         ...transfer,
@@ -385,6 +446,8 @@ export default async (request) => {
           freeTransfersSource: freeTransfers === null ? "manual_required" : "fpl_api",
           freeTransfersEstimate,
           freeTransferCap: maxFreeTransfers,
+          squadTeamLimit,
+          initialSquadBudget,
           estimateNote: freeTransfers === null
             ? "FPL API công khai không trả số Free Transfer chính xác; hãy nhập thủ công để lập kế hoạch."
             : "Số Free Transfer được lấy trực tiếp từ dữ liệu FPL.",
@@ -396,6 +459,7 @@ export default async (request) => {
           transfers: enrichedTransfers,
         },
         squad,
+        squadAnalysis: squadAnalysis(squad, horizon),
         news: buildSquadNews(squad, candidatePool),
         transferSuggestions: suggestions,
         market: candidatePool.slice(0, 36),
