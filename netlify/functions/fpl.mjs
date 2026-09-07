@@ -344,6 +344,36 @@ function bootstrapMaps(bootstrap) {
   };
 }
 
+async function loadClassicLeagues(profile, entryId) {
+  const leagues = Array.isArray(profile?.leagues?.classic) ? profile.leagues.classic.slice(0, 20) : [];
+  return Promise.all(leagues.map(async (league) => {
+    const rank = Number(league.entry_rank) || null;
+    const page = rank ? Math.max(1, Math.ceil(rank / 50)) : 1;
+    const data = await fplFetch(`leagues-classic/${league.id}/standings/?page_standings=${page}`).catch(() => null);
+    const results = Array.isArray(data?.standings?.results) ? data.standings.results : [];
+    const ownIndex = results.findIndex((row) => Number(row.entry) === Number(entryId));
+    const nearby = ownIndex >= 0
+      ? results.slice(Math.max(0, ownIndex - 3), ownIndex + 4)
+      : results.slice(0, 10);
+    return {
+      id: Number(league.id),
+      name: String(league.name || data?.league?.name || "FPL League"),
+      entryRank: rank,
+      entryLastRank: Number(league.entry_last_rank) || null,
+      totalManagers: Number(league.ranked_count ?? data?.league?.ranked_count) || null,
+      standings: nearby.map((row) => ({
+        entryId: Number(row.entry),
+        teamName: String(row.entry_name || ""),
+        managerName: String(row.player_name || ""),
+        rank: Number(row.rank) || null,
+        lastRank: Number(row.last_rank) || null,
+        totalPoints: Number(row.total) || 0,
+        eventPoints: Number(row.event_total) || 0,
+      })),
+    };
+  }));
+}
+
 export default async (request) => {
   if (request.method !== "POST")
     return json({ error: "Method not allowed" }, 405, { allow: "POST" });
@@ -363,6 +393,7 @@ export default async (request) => {
         fplFetch("fixtures/").catch(() => []),
       ]);
       const { teamsById, typesById, elementsById } = bootstrapMaps(bootstrap);
+      const classicLeagues = await loadClassicLeagues(profile, entryId);
       const currentRows = Array.isArray(history?.current) ? history.current : [];
       const chips = Array.isArray(history?.chips) ? history.chips : [];
       const latestPublicEvent = Number(currentRows[currentRows.length - 1]?.event || profile.current_event || 0);
@@ -475,6 +506,7 @@ export default async (request) => {
         },
         squad,
         squadAnalysis: squadAnalysis(squad, horizon),
+        classicLeagues,
         news: buildSquadNews(squad, candidatePool),
         market: [...candidatePool].sort((a, b) => Number(b.nowCost || 0) - Number(a.nowCost || 0)),
       });
