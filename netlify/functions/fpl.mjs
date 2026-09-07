@@ -152,6 +152,26 @@ function freeTransferEstimate(currentRows, chips, maxFreeTransfers) {
   return available;
 }
 
+function directFreeTransfers(...sources) {
+  for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+    const directKeys = ["free_transfers", "freeTransfers", "transfers_remaining"];
+    for (const key of directKeys) {
+      const value = Number(source[key]);
+      if (Number.isInteger(value) && value >= 0) return value;
+    }
+    const transfers = source.transfers;
+    if (transfers && typeof transfers === "object") {
+      const remaining = Number(transfers.remaining ?? transfers.free);
+      if (Number.isInteger(remaining) && remaining >= 0) return remaining;
+      const limit = Number(transfers.limit);
+      const made = Number(transfers.made);
+      if (Number.isInteger(limit) && Number.isInteger(made) && limit >= made) return limit - made;
+    }
+  }
+  return null;
+}
+
 function buildSquadNews(squad, allPlayers) {
   const ownedNews = squad
     .filter((pick) => pick.player?.news || availabilityRisk(pick.player || {}) > 0)
@@ -277,19 +297,32 @@ export default async (request) => {
         || bootstrap.events?.find((event) => Number(event.id) === latestPublicEvent + 1)
         || null;
       const nextEventId = Number(nextEvent?.id || Math.min(38, latestPublicEvent + 1 || 1));
-      const picksEvent = Math.max(1, Math.min(latestPublicEvent || nextEventId - 1, nextEventId));
-      let picks = null;
+      const publicPicksEvent = Math.max(1, Math.min(latestPublicEvent || nextEventId - 1, nextEventId));
+      let currentPicks = null;
       try {
-        picks = await fplFetch(`entry/${entryId}/event/${picksEvent}/picks/`);
+        currentPicks = await fplFetch(`entry/${entryId}/event/${publicPicksEvent}/picks/`);
       } catch (_) {
-        if (picksEvent > 1) picks = await fplFetch(`entry/${entryId}/event/${picksEvent - 1}/picks/`).catch(() => null);
+        if (publicPicksEvent > 1) currentPicks = await fplFetch(`entry/${entryId}/event/${publicPicksEvent - 1}/picks/`).catch(() => null);
       }
-      if (!picks?.picks?.length) {
+      if (!currentPicks?.picks?.length) {
         return json({
           error: "Đội hình chưa được FPL công khai. Hãy thử lại sau deadline Gameweek đầu tiên.",
           profile: { id: profile.id, name: profile.name },
         }, 409);
       }
+
+      const currentPicksEvent = Number(currentPicks.entry_history?.event || publicPicksEvent);
+      const currentActiveChip = String(currentPicks.active_chip || "").toLowerCase() || null;
+      let advicePicks = currentPicks;
+      let squadBasis = "current_public_gameweek";
+      if (currentActiveChip === "freehit" && currentPicksEvent > 1) {
+        const previousPicks = await fplFetch(`entry/${entryId}/event/${currentPicksEvent - 1}/picks/`).catch(() => null);
+        if (previousPicks?.picks?.length) {
+          advicePicks = previousPicks;
+          squadBasis = "previous_gameweek_before_freehit";
+        }
+      }
+      const advicePicksEvent = Number(advicePicks.entry_history?.event || currentPicksEvent);
 
       const toEvent = Math.min(38, nextEventId + horizon - 1);
       const fixturesByTeam = fixtureMap(fixtures, teamsById, nextEventId, toEvent);
@@ -308,13 +341,14 @@ export default async (request) => {
         .map(withProjection)
         .filter((player) => player.canSelect && !player.removed)
         .sort((a, b) => b.advisorScore - a.advisorScore);
-      const squad = picks.picks.map((pick) => ({
+      const squad = advicePicks.picks.map((pick) => ({
         ...pick,
         player: withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
       }));
-      const bank = Number(profile.last_deadline_bank ?? picks.entry_history?.bank ?? 0) || 0;
+      const bank = Number(advicePicks.entry_history?.bank ?? profile.last_deadline_bank ?? 0) || 0;
       const maxFreeTransfers = Math.max(1, Number(bootstrap.game_settings?.max_extra_free_transfers || 0) + 1);
-      const freeTransfers = freeTransferEstimate(currentRows, chips, maxFreeTransfers);
+      const freeTransfers = directFreeTransfers(profile, currentPicks, currentPicks.entry_history, advicePicks, advicePicks.entry_history);
+      const freeTransfersEstimate = freeTransferEstimate(currentRows, chips, maxFreeTransfers);
       const suggestions = transferSuggestions(squad, candidatePool, bank, horizon);
       const usedChipNames = chips.map((chip) => ({ name: chip.name, event: Number(chip.event), time: chip.time || null }));
       const enrichedTransfers = (Array.isArray(transfers) ? transfers : []).map((transfer) => ({
@@ -334,18 +368,26 @@ export default async (request) => {
           totalPoints: Number(profile.summary_overall_points) || 0,
           overallRank: Number(profile.summary_overall_rank) || null,
           eventPoints: Number(profile.summary_event_points) || 0,
-          teamValue: Number(profile.last_deadline_value ?? picks.entry_history?.value) || null,
+          teamValue: Number(advicePicks.entry_history?.value ?? profile.last_deadline_value) || null,
           bank,
         },
         gameweek: {
-          picksEvent: Number(picks.entry_history?.event || picksEvent),
+          picksEvent: advicePicksEvent,
+          currentPicksEvent,
+          advicePicksEvent,
+          currentActiveChip,
+          squadBasis,
           nextEvent: nextEventId,
           nextDeadline: nextEvent?.deadline_time || null,
           horizon,
           throughEvent: latestPublicEvent,
-          freeTransfersEstimate: freeTransfers,
+          freeTransfers,
+          freeTransfersSource: freeTransfers === null ? "manual_required" : "fpl_api",
+          freeTransfersEstimate,
           freeTransferCap: maxFreeTransfers,
-          estimateNote: `Ước tính từ dữ liệu công khai đến GW${latestPublicEvent || picksEvent}; chuyển nhượng chưa qua deadline có thể chưa được phản ánh.`,
+          estimateNote: freeTransfers === null
+            ? "FPL API công khai không trả số Free Transfer chính xác; hãy nhập thủ công để lập kế hoạch."
+            : "Số Free Transfer được lấy trực tiếp từ dữ liệu FPL.",
         },
         chips: usedChipNames,
         history: {
