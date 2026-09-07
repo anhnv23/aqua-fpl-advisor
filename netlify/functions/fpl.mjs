@@ -476,7 +476,7 @@ export default async (request) => {
         squad,
         squadAnalysis: squadAnalysis(squad, horizon),
         news: buildSquadNews(squad, candidatePool),
-        market: candidatePool,
+        market: [...candidatePool].sort((a, b) => Number(b.nowCost || 0) - Number(a.nowCost || 0)),
       });
     }
     return json({ error: "Action không hợp lệ." }, 400);
