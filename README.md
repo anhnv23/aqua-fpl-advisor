@@ -1,6 +1,15 @@
-# Aqua FPL Advisor v10
+# Aqua FPL Advisor v11
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v11
+
+- Đưa **Phòng tư vấn đội hình** lên trước **Xây dựng đội hình**.
+- Khi chọn cầu thủ trên sân, mở hai thao tác: **Đổi vị trí** và **Chuyển nhượng**.
+- Đổi vị trí chỉ sắp xếp đá chính–dự bị trong 15 cầu thủ hiện tại.
+- Chuyển nhượng mở danh sách cầu thủ cùng vị trí chưa có trong đội.
+- Đếm số cầu thủ mới so với đội hình gốc thành số lượt chuyển nhượng đã dùng.
+- Hiển thị FT ban đầu, FT còn lại và điểm chuyển nhượng; mỗi FT âm tương ứng `-4` điểm.
 
 ## Điểm mới trong v10
 
@@ -48,7 +57,7 @@ Nguồn dữ liệu: `https://fantasy.premierleague.com/api/`.
 
 ## Cập nhật từ bản cũ
 
-1. Giải nén v5 và ghi đè toàn bộ mã nguồn trong repository cũ.
+1. Giải nén v11 và ghi đè toàn bộ mã nguồn trong repository cũ.
 2. Xóa `public/auth-client.js` và `src/auth-client.js` nếu repository còn giữ các file này.
 3. Commit và push; chờ Netlify deploy.
 4. Giữ `OPENAI_API_KEY`; hai biến tùy chọn là `OPENAI_FAST_MODEL=gpt-5.6-luna` và `OPENAI_DEEP_MODEL=gpt-5.6-terra`.
