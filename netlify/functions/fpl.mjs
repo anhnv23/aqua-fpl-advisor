@@ -426,7 +426,6 @@ export default async (request) => {
       const initialSquadBudget = Math.max(0, Number(bootstrap.game_settings?.squad_total_spend) || 1000);
       const freeTransfers = directFreeTransfers(profile, currentPicks, currentPicks.entry_history, advicePicks, advicePicks.entry_history);
       const freeTransfersEstimate = freeTransferEstimate(currentRows, chips, maxFreeTransfers);
-      const suggestions = transferSuggestions(squad, candidatePool, bank, horizon, squadTeamLimit);
       const usedChipNames = chips.map((chip) => ({ name: chip.name, event: Number(chip.event), time: chip.time || null }));
       const enrichedTransfers = (Array.isArray(transfers) ? transfers : []).map((transfer) => ({
         ...transfer,
@@ -477,8 +476,7 @@ export default async (request) => {
         squad,
         squadAnalysis: squadAnalysis(squad, horizon),
         news: buildSquadNews(squad, candidatePool),
-        transferSuggestions: suggestions,
-        market: candidatePool.slice(0, 36),
+        market: candidatePool,
       });
     }
     return json({ error: "Action không hợp lệ." }, 400);

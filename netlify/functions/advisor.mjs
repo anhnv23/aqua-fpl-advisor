@@ -84,14 +84,6 @@ function cleanContext(context) {
       warnings: (Array.isArray(context?.transferPlan?.warnings) ? context.transferPlan.warnings : []).slice(0, 8),
       moves: (Array.isArray(context?.transferPlan?.moves) ? context.transferPlan.moves : []).slice(0, 8),
     },
-    suggestedTransfers: (Array.isArray(context.transferSuggestions) ? context.transferSuggestions : []).slice(0, 6).map((move) => ({
-      out: move?.outPlayer?.webName,
-      in: move?.inPlayer?.webName,
-      priceChange: move?.costDelta,
-      bankAfter: move?.bankAfter,
-      projectedGain: move?.projectedGain,
-      reason: move?.reason,
-    })),
     teamNews: (Array.isArray(context.news) ? context.news : []).slice(0, 10).map((item) => ({
       headline: item?.headline,
       detail: String(item?.detail || "").slice(0, 300),

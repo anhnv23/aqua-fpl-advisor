@@ -1,8 +1,18 @@
-# Aqua FPL Advisor v9
+# Aqua FPL Advisor v10
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
 
-## Điểm mới trong v9
+## Điểm mới trong v10
+
+- Loại bỏ Transfer Options và gợi ý chuyển nhượng tự động.
+- Đổi khu đội hình mô phỏng thành **Xây dựng đội hình**.
+- Tải toàn bộ danh sách cầu thủ có thể chọn từ FPL API.
+- Cho phép tìm/lọc cầu thủ, chuyển nhượng đúng vị trí, sắp xếp đá chính–dự bị và chọn đội trưởng/đội phó.
+- Kiểm tra ngân sách, giới hạn cầu thủ mỗi CLB và cấu trúc đội hình FPL.
+- Lưu đội hình đang xây dựng trên thiết bị theo Entry ID và Gameweek.
+- Phòng tư vấn nhận đội hình đang xây dựng thay cho đội hình ban đầu.
+
+## Các cập nhật từ v9
 
 - Chuyển các stripe cỏ xanh sang chiều ngang từ trái sang phải trên cả hai mặt sân.
 - Giữ nguyên hướng bố trí đội hình, thẻ cầu thủ và đường kẻ sân.
