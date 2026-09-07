@@ -1,0 +1,32 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/fpl"
+  to = "/.netlify/functions/fpl"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/advisor"
+  to = "/.netlify/functions/advisor"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
