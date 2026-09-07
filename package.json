@@ -1,6 +1,6 @@
 {
   "name": "aqua-fpl-advisor",
-  "version": "1.5.0",
+  "version": "1.8.0",
   "private": true,
   "description": "Standalone FPL squad, transfer and ChatGPT advisor",
   "engines": {

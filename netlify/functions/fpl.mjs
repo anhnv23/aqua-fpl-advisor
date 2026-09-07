@@ -222,7 +222,23 @@ function buildSquadNews(squad, allPlayers) {
       detail: `Mua ròng ${(player.transfersInEvent - player.transfersOutEvent).toLocaleString("en-GB")} · Form ${player.form ?? "–"} · Giá £${(player.nowCost / 10).toFixed(1)}m.`,
       updatedAt: null,
     }));
-  return [...ownedNews, ...ownedMarket, ...marketLeaders].slice(0, 10);
+  const priceChanges = [...allPlayers]
+    .filter((player) => Number(player.costChangeEvent) !== 0)
+    .sort((a, b) => Math.abs(Number(b.costChangeEvent)) - Math.abs(Number(a.costChangeEvent)))
+    .slice(0, 8)
+    .map((player) => ({
+      id: `price-${player.id}`,
+      type: "price",
+      severity: Number(player.costChangeEvent) < 0 ? "medium" : "info",
+      isOwned: squad.some((pick) => Number(pick.player?.id) === Number(player.id)),
+      playerId: player.id,
+      headline: `${player.webName} ${Number(player.costChangeEvent) > 0 ? "tăng" : "giảm"} giá`,
+      detail: `${Number(player.costChangeEvent) > 0 ? "+" : ""}£${(Number(player.costChangeEvent) / 10).toFixed(1)}m trong Gameweek · Giá hiện tại £${(Number(player.nowCost) / 10).toFixed(1)}m.`,
+      priceChange: Number(player.costChangeEvent),
+      currentPrice: Number(player.nowCost),
+      updatedAt: null,
+    }));
+  return [...ownedNews, ...priceChanges, ...ownedMarket, ...marketLeaders].slice(0, 16);
 }
 
 function transferSuggestions(squad, candidates, bank, horizon, teamLimit = 3) {

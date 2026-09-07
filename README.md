@@ -1,8 +1,25 @@
-# Aqua FPL Advisor v6
+# Aqua FPL Advisor v9
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
 
-## Điểm mới trong v6
+## Điểm mới trong v9
+
+- Chuyển các stripe cỏ xanh sang chiều ngang từ trái sang phải trên cả hai mặt sân.
+- Giữ nguyên hướng bố trí đội hình, thẻ cầu thủ và đường kẻ sân.
+
+## Các cập nhật từ v8
+
+- Xoay toàn bộ stripe cỏ theo chiều dọc sân.
+- Tăng cỡ chữ và dùng màu gold cho Nhận định nhanh.
+- Thu gọn khu phương án chuyển nhượng, mở rộng Phòng tư vấn.
+- Squad Impact Feed trở thành bảng tin ngang, bổ sung biến động giá trực tiếp từ `cost_change_event` của FPL.
+- Season Tracker có bộ chọn Gameweek để lọc lịch sử chuyển nhượng và chip.
+
+## Các cập nhật từ v7
+
+- Xoay hướng nền sân bóng 90° để các dải cỏ và trục sân khớp với sơ đồ đội hình: tiền đạo phía trên, thủ môn phía dưới.
+
+## Các cập nhật từ v6
 
 - Sửa thông báo token “not from a valid issuer”: backend chỉ chấp nhận OpenAI API key bắt đầu bằng `sk-`, tự loại bỏ tiền tố `Bearer` bị dán nhầm và hướng dẫn cấu hình lại rõ ràng.
 - Đội hình hiện tại chiếm toàn bộ chiều rộng, bố trí theo vị trí thật trên mặt sân.
