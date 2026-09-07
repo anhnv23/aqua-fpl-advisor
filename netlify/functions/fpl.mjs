@@ -352,9 +352,10 @@ async function loadClassicLeagues(profile, entryId) {
     const data = await fplFetch(`leagues-classic/${league.id}/standings/?page_standings=${page}`).catch(() => null);
     const results = Array.isArray(data?.standings?.results) ? data.standings.results : [];
     const ownIndex = results.findIndex((row) => Number(row.entry) === Number(entryId));
-    const nearby = ownIndex >= 0
-      ? results.slice(Math.max(0, ownIndex - 3), ownIndex + 4)
-      : results.slice(0, 10);
+    const start = ownIndex >= 0
+      ? Math.max(0, Math.min(ownIndex - 14, Math.max(0, results.length - 30)))
+      : 0;
+    const nearby = results.slice(start, start + 30);
     return {
       id: Number(league.id),
       name: String(league.name || data?.league?.name || "FPL League"),
