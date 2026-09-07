@@ -114,8 +114,17 @@ export default async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405, { allow: "POST" });
   if (!allowRequest(request)) return json({ error: "Bạn đang gửi quá nhiều câu hỏi. Hãy thử lại sau ít phút." }, 429);
 
-  const apiKey = process.env.OPENAI_API_KEY || "";
+  const apiKey = String(process.env.OPENAI_API_KEY || "")
+    .trim()
+    .replace(/^Bearer\s+/i, "")
+    .replace(/^['"]|['"]$/g, "");
   if (!apiKey) return json({ error: "ChatGPT Advisor chưa được cấu hình OPENAI_API_KEY trên Netlify." }, 503);
+  if (!apiKey.startsWith("sk-")) {
+    return json({
+      error: "OPENAI_API_KEY không hợp lệ.",
+      detail: "Hãy dùng API key được tạo tại platform.openai.com, không dùng token đăng nhập ChatGPT hoặc token Netlify Identity.",
+    }, 503);
+  }
 
   try {
     const body = await request.json();
@@ -162,7 +171,11 @@ export default async (request) => {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const detail = data?.error?.message || `OpenAI API HTTP ${response.status}`;
+      const originalDetail = data?.error?.message || `OpenAI API HTTP ${response.status}`;
+      const authFailure = response.status === 401 || /authentication token|valid issuer|invalid api key/i.test(originalDetail);
+      const detail = authFailure
+        ? "OPENAI_API_KEY trên Netlify không phải API key hợp lệ. Hãy tạo key mới tại platform.openai.com/api-keys, chỉ dán giá trị bắt đầu bằng sk-, rồi deploy lại site."
+        : originalDetail;
       return json({ error: "ChatGPT chưa thể trả lời lúc này.", detail }, response.status >= 500 ? 502 : 400);
     }
     const answer = outputText(data);
