@@ -1,6 +1,14 @@
-# Aqua FPL Advisor v25
+# Aqua FPL Advisor v26
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v26
+
+- Squad Builder hiển thị Wildcard, Free Hit, Triple Captain và Bench Boost cùng trạng thái sử dụng.
+- Cho phép chọn một chip dự kiến cho Gameweek tiếp theo.
+- Wildcard và Free Hit cho chuyển nhượng không giới hạn, không phát sinh điểm trừ và giữ nguyên FT đã tích lũy.
+- Free Hit đánh dấu đội hình tạm thời; Wildcard đánh dấu đội hình thay đổi lâu dài.
+- Trạng thái chip được xác định riêng cho nửa đầu và nửa sau mùa giải.
 
 ## Điểm mới trong v25
 
