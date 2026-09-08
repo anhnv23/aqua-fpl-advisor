@@ -454,8 +454,15 @@ export default async (request) => {
       const squad = baseSquad.map((pick, index) => ({ ...pick, player: { ...pick.player, recentPoints: recentHistory(elementSummaries[index]) } }));
       const gameweekPicks = await Promise.all(currentRows.map(async (row) => {
         const event = Number(row.event);
-        const picks = event === currentPicksEvent ? currentPicks : await fplFetch(`entry/${entryId}/event/${event}/picks/`).catch(() => null);
+        const [picks, live] = await Promise.all([
+          event === currentPicksEvent ? Promise.resolve(currentPicks) : fplFetch(`entry/${entryId}/event/${event}/picks/`).catch(() => null),
+          fplFetch(`event/${event}/live/`).catch(() => null),
+        ]);
         if (!picks?.picks?.length) return null;
+        const livePoints = new Map((Array.isArray(live?.elements) ? live.elements : []).map((element) => [
+          Number(element.id),
+          Number(element.stats?.total_points) || 0,
+        ]));
         return {
           event,
           points: Number(picks.entry_history?.points ?? row.points) || 0,
@@ -464,7 +471,10 @@ export default async (request) => {
           activeChip: picks.active_chip || null,
           squad: picks.picks.map((pick) => ({
             ...pick,
-            player: withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
+            player: {
+              ...withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
+              gameweekPoints: livePoints.get(Number(pick.element)) || 0,
+            },
           })),
         };
       }));
