@@ -1,6 +1,14 @@
-# Aqua FPL Advisor v16
+# Aqua FPL Advisor v17
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v17
+
+- Rút gọn đầu trang, chỉ giữ Entry ID và khoảng phân tích.
+- Gộp điểm đội với Overall Rank; thay ô đội hình nguồn bằng Gameweek tới.
+- Loại bỏ My Squad và đưa Squad Builder thành khu đội hình chính.
+- Dùng icon cho vị trí, bỏ nhãn chữ ở hai dòng dữ liệu cầu thủ.
+- Squad Builder tự co vừa chiều rộng mobile, không cần kéo ngang.
 
 ## Điểm mới trong v16
 
