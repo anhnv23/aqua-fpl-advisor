@@ -452,6 +452,22 @@ export default async (request) => {
       }));
       const elementSummaries = await Promise.all(baseSquad.map((pick) => fplFetch(`element-summary/${pick.player?.id}/`).catch(() => null)));
       const squad = baseSquad.map((pick, index) => ({ ...pick, player: { ...pick.player, recentPoints: recentHistory(elementSummaries[index]) } }));
+      const gameweekPicks = await Promise.all(currentRows.map(async (row) => {
+        const event = Number(row.event);
+        const picks = event === currentPicksEvent ? currentPicks : await fplFetch(`entry/${entryId}/event/${event}/picks/`).catch(() => null);
+        if (!picks?.picks?.length) return null;
+        return {
+          event,
+          points: Number(picks.entry_history?.points ?? row.points) || 0,
+          totalPoints: Number(picks.entry_history?.total_points ?? row.total_points) || 0,
+          overallRank: Number(picks.entry_history?.overall_rank ?? row.overall_rank) || null,
+          activeChip: picks.active_chip || null,
+          squad: picks.picks.map((pick) => ({
+            ...pick,
+            player: withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
+          })),
+        };
+      }));
       const bank = Number(advicePicks.entry_history?.bank ?? profile.last_deadline_bank ?? 0) || 0;
       const maxFreeTransfers = Math.max(1, Number(bootstrap.game_settings?.max_extra_free_transfers || 0) + 1);
       const squadTeamLimit = Math.max(1, Number(bootstrap.game_settings?.squad_team_limit) || 3);
@@ -506,6 +522,7 @@ export default async (request) => {
           transfers: enrichedTransfers,
         },
         squad,
+        gameweekSquads: gameweekPicks.filter(Boolean).sort((a, b) => b.event - a.event),
         squadAnalysis: squadAnalysis(squad, horizon),
         classicLeagues,
         news: buildSquadNews(squad, candidatePool),
