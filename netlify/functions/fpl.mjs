@@ -289,6 +289,7 @@ function recentHistory(summary) {
     .map((row) => ({
       gameweek: Number(row.round),
       points: Number(row.total_points) || 0,
+      bonus: Number(row.bonus) || 0,
       minutes: Number(row.minutes) || 0,
       home: Boolean(row.was_home),
       opponentTeamId: Number(row.opponent_team) || null,
@@ -381,6 +382,21 @@ export default async (request) => {
 
   try {
     const body = await request.json();
+    if (body.action === "playerDetails") {
+      const ids = [...new Set((Array.isArray(body.playerIds) ? body.playerIds : []).map(numericId).filter(Boolean))].slice(0, 80);
+      if (!ids.length) return json({ ok: true, details: {} });
+      const summaries = await Promise.all(ids.map((id) => fplFetch(`element-summary/${id}/`).catch(() => null)));
+      const details = Object.fromEntries(ids.map((id, index) => {
+        const recent = recentHistory(summaries[index]);
+        return [id, {
+          recent,
+          lastFivePoints: recent.reduce((sum, row) => sum + row.points, 0),
+          lastFiveBonus: recent.reduce((sum, row) => sum + row.bonus, 0),
+          lastFiveMinutes: recent.reduce((sum, row) => sum + row.minutes, 0),
+        }];
+      }));
+      return json({ ok: true, details });
+    }
     if (body.action === "advisorSnapshot") {
       const entryId = numericId(body.entryId);
       const horizon = Math.max(2, Math.min(8, Number(body.horizon) || 5));
