@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v19
+# Aqua FPL Advisor v20
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v20
+
+- Loại bỏ chú thích Free Hit và nhãn Chế độ chỉnh sửa khỏi Squad Builder.
+- Sửa lỗi đổi Gameweek nhưng sân chưa cập nhật đúng đội hình.
+- Hiển thị trực tiếp điểm vòng, đội trưởng, đội phó và chip của Gameweek đã chọn.
+- Đội hình từng Gameweek lấy đúng danh sách picks công khai từ FPL API.
 
 ## Điểm mới trong v19
 
