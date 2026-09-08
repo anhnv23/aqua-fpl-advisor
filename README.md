@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v22
+# Aqua FPL Advisor v23
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v23
+
+- Loại bỏ toàn bộ icon biểu trưng cho các tuyến trên sân.
+- Mỗi cầu thủ có nhãn vị trí riêng ở dưới thẻ: ST, MID, DEF hoặc GK.
+- Áp dụng cho cả đội hình đá chính, dự bị và đội hình Gameweek lịch sử.
+- Nhãn vị trí đi theo cầu thủ khi sắp xếp hoặc chuyển nhượng.
 
 ## Điểm mới trong v22
 
