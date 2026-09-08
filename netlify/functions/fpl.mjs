@@ -469,13 +469,18 @@ export default async (request) => {
           totalPoints: Number(picks.entry_history?.total_points ?? row.total_points) || 0,
           overallRank: Number(picks.entry_history?.overall_rank ?? row.overall_rank) || null,
           activeChip: picks.active_chip || null,
-          squad: picks.picks.map((pick) => ({
-            ...pick,
-            player: {
-              ...withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
-              gameweekPoints: livePoints.get(Number(pick.element)) || 0,
-            },
-          })),
+          squad: picks.picks.map((pick) => {
+            const rawGameweekPoints = livePoints.get(Number(pick.element)) || 0;
+            const multiplier = Number(pick.multiplier) || 0;
+            return {
+              ...pick,
+              player: {
+                ...withProjection(compactElement(elementsById.get(Number(pick.element)), teamsById, typesById)),
+                rawGameweekPoints,
+                gameweekPoints: rawGameweekPoints * multiplier,
+              },
+            };
+          }),
         };
       }));
       const bank = Number(advicePicks.entry_history?.bank ?? profile.last_deadline_bank ?? 0) || 0;

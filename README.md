@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v21
+# Aqua FPL Advisor v22
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v22
+
+- Điểm cầu thủ trong Gameweek lịch sử được nhân với multiplier chính thức của FPL.
+- Hỗ trợ hệ số đội trưởng ×2, Triple Captain ×3, dự bị ×0 và Bench Boost.
+- Khi đội phó được chuyển thành đội trưởng thay thế, điểm được nhân đúng và hiển thị ký hiệu C*.
+- Tooltip cho biết điểm gốc và hệ số được áp dụng.
 
 ## Điểm mới trong v21
 
