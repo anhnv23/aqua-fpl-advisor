@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v26
+# Aqua FPL Advisor v27
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v27
+
+- Sửa lỗi HTTP 504 khi Phòng tư vấn phải chờ quá lâu, đặc biệt khi bật kiểm tra tin mới trên web.
+- Giới hạn thời gian riêng cho lượt tìm tin và tự động tiếp tục tư vấn bằng snapshot FPL nếu tìm kiếm phản hồi chậm.
+- Giới hạn tổng thời gian chờ phía trình duyệt và luôn thoát khỏi trạng thái “Đang phân tích”.
+- Hiển thị thông báo rõ ràng khi lượt tư vấn phải dùng dữ liệu FPL đã tải thay cho tin web trực tiếp.
 
 ## Điểm mới trong v26
 

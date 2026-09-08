@@ -102,6 +102,26 @@ function outputText(payload) {
     .join("\n");
 }
 
+async function callOpenAI(apiKey, payload, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export default async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405, { allow: "POST" });
   if (!allowRequest(request)) return json({ error: "Bạn đang gửi quá nhiều câu hỏi. Hãy thử lại sau ít phút." }, 429);
@@ -151,17 +171,36 @@ export default async (request) => {
       ].join(" "),
       input,
     };
-    if (body?.liveNews !== false) payload.tools = [{ type: "web_search" }];
+    const wantsLiveNews = body?.liveNews !== false;
+    if (wantsLiveNews) payload.tools = [{ type: "web_search" }];
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json().catch(() => ({}));
+    let response;
+    let data;
+    let liveNewsUsed = wantsLiveNews;
+    let fallbackReason = null;
+    try {
+      ({ response, data } = await callOpenAI(apiKey, payload, wantsLiveNews ? 22000 : 45000));
+      if (wantsLiveNews && !response.ok && response.status >= 500) {
+        liveNewsUsed = false;
+        fallbackReason = "Tin web tạm thời không khả dụng; tư vấn được hoàn tất bằng dữ liệu FPL đã tải.";
+        const fallbackPayload = {
+          ...payload,
+          tools: undefined,
+          instructions: `${payload.instructions} Không dùng web search trong lượt này; dựa trên snapshot FPL đã cung cấp và nói rõ nếu thông tin mới chưa được xác minh.`,
+        };
+        ({ response, data } = await callOpenAI(apiKey, fallbackPayload, 26000));
+      }
+    } catch (error) {
+      if (!wantsLiveNews || error?.name !== "AbortError") throw error;
+      liveNewsUsed = false;
+      fallbackReason = "Tin web phản hồi chậm; tư vấn được hoàn tất bằng dữ liệu FPL đã tải.";
+      const fallbackPayload = {
+        ...payload,
+        tools: undefined,
+        instructions: `${payload.instructions} Không dùng web search trong lượt này; dựa trên snapshot FPL đã cung cấp và nói rõ nếu thông tin mới chưa được xác minh.`,
+      };
+      ({ response, data } = await callOpenAI(apiKey, fallbackPayload, 26000));
+    }
     if (!response.ok) {
       const originalDetail = data?.error?.message || `OpenAI API HTTP ${response.status}`;
       const authFailure = response.status === 401 || /authentication token|valid issuer|invalid api key/i.test(originalDetail);
@@ -180,8 +219,16 @@ export default async (request) => {
       advisorMode,
       advisorLabel: modeConfig.label,
       reasoningEffort: modeConfig.reasoningEffort,
+      liveNewsUsed,
+      fallbackReason,
     });
   } catch (error) {
+    if (error?.name === "AbortError") {
+      return json({
+        error: "Phòng tư vấn phản hồi quá thời gian.",
+        detail: "Hãy gửi lại câu hỏi hoặc tắt Kiểm tra tin mới trên web để nhận kết quả nhanh hơn.",
+      }, 504);
+    }
     return json({ error: "Không thể kết nối ChatGPT Advisor.", detail: error.message }, 502);
   }
 };
