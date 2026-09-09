@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v38
+# Aqua FPL Advisor v39
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v39
+
+- Trên mobile, chọn Chuyển nhượng sẽ tự cuộn tới khu vực Chọn cầu thủ.
+- Sau khi chọn ứng viên, màn hình tự cuộn trở lại sân đội hình.
+- Danh sách ứng viên vẫn mở để người dùng có thể quay lại thay đổi phương án.
+- Desktop không bị tác động bởi cơ chế cuộn tự động.
 
 ## Điểm mới trong v38
 
