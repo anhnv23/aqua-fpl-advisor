@@ -1,6 +1,32 @@
-# Aqua FPL Advisor v27
+# Aqua FPL Advisor v31
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v31
+
+- Số tiền còn hoặc thiếu tiếp tục hiển thị ngay trong từng thẻ ứng viên.
+- Sau khi chọn cầu thủ, danh sách chuyển nhượng vẫn mở để đổi sang phương án khác.
+- Cho phép mô phỏng giao dịch làm ngân sách âm.
+- Cho phép mô phỏng cầu thủ thứ tư cùng CLB.
+- Các vi phạm chỉ tạo cảnh báo đỏ và trạng thái đội hình chưa hợp lệ, không chặn thao tác.
+
+## Điểm mới trong v30
+
+- Số tiền còn lại chỉ hiển thị `£…`, không có dấu cộng.
+- Khi thiếu ngân sách vẫn hiển thị `−£…` và được highlight màu đỏ.
+
+## Điểm mới trong v29
+
+- Thay chữ “Còn” bằng dấu `+` trước số dư sau chuyển nhượng.
+- Thay chữ “Thiếu” bằng dấu `−` trước phần ngân sách vượt mức.
+
+## Điểm mới trong v28
+
+- Cửa sổ chuyển nhượng hiển thị giá cầu thủ đang bán và ngân sách tối đa có thể mua.
+- Mỗi ứng viên hiển thị số tiền còn lại hoặc số tiền còn thiếu nếu thực hiện chuyển nhượng.
+- Danh sách ứng viên tiếp tục được sắp xếp theo giá giảm dần.
+- Nếu có từ 4 cầu thủ cùng một CLB, tất cả cầu thủ thuộc CLB đó được highlight đỏ trên sân.
+- Giữ cảnh báo giới hạn tối đa 3 cầu thủ mỗi CLB theo luật FPL.
 
 ## Điểm mới trong v27
 
