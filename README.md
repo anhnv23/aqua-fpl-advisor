@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v36
+# Aqua FPL Advisor v37
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v37
+
+- Đổi ký hiệu tỷ lệ sở hữu từ `TSB` thành `SEL`.
+- Tách thống kê 5 Gameweek gần nhất thành một dòng riêng.
+- Số phút trong từng trận dùng dấu `'`, ví dụ `90'`, thay cho chữ `M`.
+- Lịch 5 trận sắp tới được chuyển xuống dòng riêng phía dưới.
 
 ## Điểm mới trong v36
 
