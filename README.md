@@ -1,6 +1,20 @@
-# Aqua FPL Advisor v32
+# Aqua FPL Advisor v34
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v34
+
+- Danh sách chuyển nhượng dùng thẻ ứng viên dạng compact để duyệt tối thiểu 10 cầu thủ trong vùng hiển thị desktop.
+- Thông số được bố trí trên một hàng với ký hiệu tiếng Anh: TP, TB, P5, B5, M5, TSB, F5 và BANK.
+- Thu hẹp vùng đội hình và mở rộng vùng chọn cầu thủ khi hiển thị hai cột.
+- Bổ sung đường khung thành, khu vực vòng cấm và cung vòng cấm ở hai đầu sân.
+
+## Điểm mới trong v33
+
+- Hàng dự bị luôn hiển thị thủ môn (GK) ở vị trí đầu tiên.
+- Áp dụng nhất quán cho đội hình đang xây dựng và đội hình Gameweek lịch sử.
+- Các cầu thủ dự bị ngoài sân còn lại giữ nguyên thứ tự ưu tiên từ FPL.
+- Chỉ thay đổi cách hiển thị, không sửa dữ liệu hoặc thứ tự thay người của đội hình.
 
 ## Điểm mới trong v32
 
