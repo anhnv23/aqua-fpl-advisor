@@ -1,6 +1,13 @@
-# Aqua FPL Advisor v35
+# Aqua FPL Advisor v36
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v36
+
+- Đưa ngân sách còn lại sau khi mua lên cùng dòng với giá cầu thủ.
+- Đổi ký hiệu `BANK` thành `BIB` (Balance If Bought).
+- BIB luôn nhìn thấy ngay, không nằm trong hàng thông tin phải trượt ngang.
+- BIB âm tiếp tục được hiển thị màu đỏ.
 
 ## Điểm mới trong v35
 
