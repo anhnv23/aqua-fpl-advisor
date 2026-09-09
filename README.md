@@ -1,6 +1,14 @@
-# Aqua FPL Advisor v31
+# Aqua FPL Advisor v32
 
 Webapp Netlify độc lập để phân tích đội hình Fantasy Premier League theo Entry ID, mô phỏng chuyển nhượng và trao đổi với AI trong ngữ cảnh đội hình hiện tại.
+
+## Điểm mới trong v32
+
+- Đưa thao tác Đội trưởng và Đội phó vào popup khi chọn cầu thủ trên sân.
+- Luôn duy trì đúng một đội trưởng và một đội phó khác nhau trong đội hình chính.
+- Bổ sung Khôi phục vị trí để đưa cầu thủ ban đầu trở lại đúng slot đang chọn.
+- Danh sách ứng viên chuyển nhượng luôn hiển thị và không đóng sau thao tác.
+- Loại bỏ hai nút Đội trưởng/Đội phó khỏi thanh điều khiển; giữ nút Khôi phục toàn bộ.
 
 ## Điểm mới trong v31
 
